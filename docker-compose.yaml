@@ -1,0 +1,20 @@
+services:
+  api-backend:
+    build:
+      context: ./api-backend
+    environment:
+      - API_BACKEND_URL=api-backend
+      - API_BACKEND_PORT=8001
+    ports:
+      - "8001:8001"
+
+  api-frontend:
+    build:
+      context: ./api-frontend
+    environment:
+      - API_BACKEND_URL=api-backend
+      - API_BACKEND_PORT=8001
+    ports:
+      - "8000:8000"
+    depends_on:
+      - api-backend
