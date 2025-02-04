@@ -1,0 +1,154 @@
+module TaskManagement{
+struct Task {
+    string description;
+    boolean isFinished;
+};
+
+typedef sequence<Task> Tasks;
+
+interface ITaskManager{
+    void addTask(in Task task);
+    void markTask(in Task task);
+    Tasks listTasks();
+};
+};
+
+public class ITaskManagerImp extends ITaskManagerPOA {
+
+    List<Task> tasks = new ArrayList<Task>();
+
+    @Override
+    public void addTask(Task task) {
+        tasks.add(task);
+    }
+
+    @Override
+    public void markTask(Task task) {
+        if (!task.isFinished) {
+            task.isFinished = true;
+        }
+    }
+
+    @Override
+    public Task[] listTasks() {
+        return tasks.toArray(new Task[0]);
+    }
+}
+
+import org.omg.CORBA.ORB;
+import org.omg.CORBA.ORBPackage.InvalidName;
+import org.omg.PortableServer.POA;
+import org.omg.PortableServer.POAHelper;
+import org.omg.PortableServer.POAManagerPackage.AdapterInactive;
+import org.omg.PortableServer.POAPackage.ServantNotActive;
+import org.omg.PortableServer.POAPackage.WrongPolicy;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
+public class Main {
+    public static void main(String[] args) throws InvalidName, AdapterInactive, WrongPolicy, ServantNotActive, NamingException {
+        ORB orb = ORB.init(args, null);
+        POA rootPoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+        rootPoa.the_POAManager().activate();
+        ITaskManagerImp iTaskManagerImp = new ITaskManagerImp();
+        org.omg.CORBA.Object ref = rootPoa.servant_to_reference(iTaskManagerImp);
+        Context ctx = new InitialContext();
+        ctx.rebind("Task", ref);
+        System.out.println("Server is ready and waiting for requests...");
+        orb.run();
+    }
+}
+
+import TaskManagement.ITaskManager;
+import TaskManagement.ITaskManagerHelper;
+import TaskManagement.Task;
+
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
+public class Main {
+    public static void main(String[] args) throws NamingException {
+        InitialContext context = new InitialContext();
+        Object object = context.lookup("Task");
+        ITaskManager stub = ITaskManagerHelper.narrow((org.omg.CORBA.Object) object);
+        Task task1 = new Task("Play football", false);
+        Task task2 = new Task("Fix phone", false);
+        Task task3 = new Task("Tayyi m3a lahl", false);
+        stub.addTask(task1);
+        stub.addTask(task2);
+        stub.addTask(task3);
+        Task[] tasks = stub.listTasks();
+        System.out.println("List of tasks : ");
+        for (int i = 0; i < tasks.length; i++) {
+            System.out.println("Task description : " + tasks[i].description);
+            System.out.println("Task status : " + tasks[i].isFinished);
+            System.out.println("-----------------------------------------------");
+        }
+    }
+}
+
+
+
+
+
+
+
+1. *Qu'est-ce que CORBA et pourquoi est-il utilisé ?*  
+CORBA est un standard pour la communication entre objets distribués. Il permet l’interopérabilité entre objets écrits dans différents langages sur des machines distantes.
+
+2. *Différence entre CORBA et Web Services ?*  
+CORBA utilise un ORB pour gérer les appels d’objets distants, tandis que Web Services communiquent via HTTP et des formats comme XML ou JSON.
+
+3. *Rôle de l'ORB dans CORBA ?*  
+L'ORB gère la communication entre le client et le serveur en acheminant les requêtes d’objets, facilitant l’interopérabilité entre différentes machines et langages.
+
+4. *Rôle de l'IDL dans CORBA ?*  
+L’IDL définit les interfaces des objets CORBA indépendamment du langage. Il permet de générer des stubs et skeletons pour faciliter la communication inter-objets.
+
+5. *Comment créer une application CORBA en Java ?*  
+Définissez l'interface en IDL, compilez-la pour générer des stubs et skeletons, puis implémentez un serveur et un client utilisant un ORB.
+
+---
+
+### *JMS et ActiveMQ :*
+
+1. *Qu'est-ce que JMS ?*  
+JMS est une API Java permettant la communication asynchrone entre applications via des messages. Il supporte les modèles *point-à-point* (Queue) et *publish/subscribe* (Topic).
+
+2. *Différence entre Queue et Topic dans JMS ?*  
+Queue permet un seul consommateur par message. Topic envoie le message à tous les abonnés. Queue est point-à-point, Topic est pub/sub.
+
+3. *Qu'est-ce qu'un Message en JMS ?*  
+Un message dans JMS transporte des données entre producteurs et consommateurs. Types courants : *TextMessage, **ObjectMessage, **MapMessage*.
+
+4. *Produit et consommateur dans JMS ?*  
+Le *producteur* envoie des messages à une queue/topic. Le *consommateur* reçoit ces messages et les traite.
+
+5. *Qu'est-ce qu'ActiveMQ ?*  
+ActiveMQ est un broker de messages open-source implémentant JMS. Il permet la gestion de queues, topics, persistance des messages, et la communication entre applications distribuées.
+
+6. *Principales caractéristiques d'ActiveMQ ?*  
+ActiveMQ supporte JMS, plusieurs protocoles (AMQP, MQTT), haute disponibilité, clustering, persistance des messages, et peut être configuré pour des performances optimisées.
+
+7. *Comment configurer ActiveMQ ?*  
+Ajoutez la dépendance *ActiveMQ* dans votre projet, configurez le broker via activemq.xml, puis établissez des connexions pour envoyer et recevoir des messages.
+
+8. *Exemple de producteur et consommateur avec ActiveMQ ?*  
+Producteur : crée une connexion, envoie un message à la queue. Consommateur : se connecte à la même queue et reçoit le message envoyé.
+
+9. *Persistance des messages dans ActiveMQ ?*  
+La persistance des messages garantit qu'ils ne seront pas perdus après un redémarrage du broker, en stockant les messages dans une base de données ou disque.
+
+10. *Session.AUTO_ACKNOWLEDGE en JMS ?*  
+AUTO_ACKNOWLEDGE assure que les messages sont automatiquement validés dès leur réception par le consommateur, simplifiant le traitement des accusés de réception.
+
+11. *Durable Topic dans ActiveMQ ?*  
+Un Durable Topic garantit que les abonnés recevront les messages même s'ils sont déconnectés lorsqu'un message est envoyé, assurant la livraison.
+
+12. *Gérer les transactions dans JMS ?*  
+Les transactions JMS permettent de grouper plusieurs envois/réceptions de messages, garantissant une livraison atomique. Si une transaction échoue, tous les messages sont annulés.
+
+13. *Facteurs de performance dans ActiveMQ ?*  
+Optimisez la configuration de la persistance, la consommation mémoire, la gestion du réseau et utilisez le clustering pour garantir une haute performance et scalabilité.
